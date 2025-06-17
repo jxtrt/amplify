@@ -4,34 +4,45 @@ browser.runtime.onMessage.addListener((message) => {
     }
 });
 
+// add random string to avoid removing content on the original page
+function generateRandomId(prefix) {
+    const randomString = Math.random().toString(36).substring(2, 10);
+    return `${prefix}-${randomString}`;
+}
+const idRefs = {
+    dialog: generateRandomId('amplify-dialog'),
+    image: generateRandomId('amplify-image')
+};
+
 const dialogStyle = {
-    padding: "20px", // Add consistent padding around dialog content
+    padding: "20px",
     backgroundColor: "white",
     border: "1px solid #ccc",
     borderRadius: "8px",
     zIndex: "3000",
-    boxSizing: "border-box", // Include padding in size calculations
-    outline: "none", // Remove default outline
+    boxSizing: "border-box", // to take padding into acc for size calculations
+    outline: "none", // outline that shows when dialog is focused
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
+    width: "auto",
+    height: "auto",
 };
 
 const imgStyle = {
-    height: "auto", // Maintain aspect ratio
+    height: "auto",
     objectFit: "contain",
     cursor: "pointer",
     display: "block",
-    margin: "0", // Remove margin since we're using dialog padding
+    margin: "0",
 };
 
-// Size configurations for different amplification options
-const sizeConfigs = {
+const sizeConfigs = { // using 45px to leave some breathing room
     '50%': {
         dialogMaxWidth: '50vw',
         dialogMaxHeight: '50vh',
         imageWidth: '100%',
-        imageMaxWidth: 'calc(50vw - 45px)', // Account for dialog padding
+        imageMaxWidth: 'calc(50vw - 45px)',
         imageMaxHeight: 'calc(50vh - 45px)'
     },
     '75%': {
@@ -51,7 +62,7 @@ const sizeConfigs = {
 };
 
 function closeDialog() {
-    dialog = document.getElementById("amplify-dialog");
+    dialog = document.getElementById(idRefs.dialog);
     if (dialog) {
         dialog.close();
         dialog.remove();
@@ -59,35 +70,25 @@ function closeDialog() {
 }
 
 function amplifyImage(imageUrl, size = '100%') {
-    const existingDialog = document.getElementById("amplify-dialog");
+    const existingDialog = document.getElementById(idRefs.dialog);
     if (existingDialog) {
         existingDialog.remove();
     }
 
-    // Get the size configuration (default to 100% if not found)
+    // default to 100% although the code path should be unreachable
     const config = sizeConfigs[size] || sizeConfigs['100%'];
 
     const dialog = document.createElement("dialog");
-    dialog.id = "amplify-dialog";
-    
-    // Apply base dialog style
+    dialog.id = idRefs.dialog;
     Object.assign(dialog.style, dialogStyle);
-    
-    // Apply size-specific dialog styles
-    dialog.style.maxWidth = config.dialogMaxWidth;
+    dialog.style.maxWidth = config.dialogMaxWidth; // size-specific
     dialog.style.maxHeight = config.dialogMaxHeight;
-    dialog.style.width = 'auto';
-    dialog.style.height = 'auto';
 
     const img = document.createElement("img");
-    img.id = "amplify-image";
+    img.id = idRefs.image;
     img.src = imageUrl;
-    
-    // Apply base image style
     Object.assign(img.style, imgStyle);
-    
-    // Apply size-specific image styles
-    img.style.width = config.imageWidth;
+    img.style.width = config.imageWidth; // size-specific
     img.style.maxWidth = config.imageMaxWidth;
     img.style.maxHeight = config.imageMaxHeight;
 
